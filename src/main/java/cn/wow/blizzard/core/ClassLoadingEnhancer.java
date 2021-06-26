@@ -16,10 +16,12 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ClassLoadingEnhancer implements ClassFileTransformer {
 
-   static final Logger logger = LoggerFactory.getLogger(ClassLoadingEnhancer.class);
+    static final Logger logger = LoggerFactory.getLogger(ClassLoadingEnhancer.class);
 
     @Override
     public byte[] transform(ClassLoader loader, String className,
@@ -57,36 +59,79 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
             if (!ctClass.isInterface()) {
 
                 CtConstructor[] constructors = ctClass.getConstructors();
+                if (null != constructors && constructors.length > 0) {
+                    for (CtConstructor ctConstructor : constructors) {
+                        constructorAop(className, ctConstructor);
+                    }
+                }
 
                 CtMethod[] methods = ctClass.getDeclaredMethods();
                 if (null != methods && methods.length > 0) {
 
                     for (CtMethod ctMethod : methods) {
-                        methodAop(className,ctMethod);
+                        methodAop(className, ctMethod);
                     }
                     byteCode = ctClass.toBytecode();
                 }
             }
             ctClass.detach();
-        } catch (Exception ex) {
-            System.err.println(ex);
+        } catch (Exception exception) {
+            System.err.println(exception);
+            logger.error("[doEnhanceError]", exception);
         }
         return byteCode;
+    }
+
+    private void constructorAop(String className, CtConstructor ctConstructor) throws CannotCompileException {
+        if (null == ctConstructor || ctConstructor.isEmpty()) {
+            return;
+        }
+        String parameterTypesStr = "voidParameter";
+        try {
+            CtClass[] parameterTypes = ctConstructor.getParameterTypes();
+
+            if (parameterTypes!=null && parameterTypes.length>0) {
+                parameterTypesStr = Stream.of(parameterTypes).map(CtClass::getName).collect(Collectors.joining(","));
+
+            }
+        } catch (Exception e) {
+            logger.error("[getParameterTypesError]", e);
+        }
+
+        Class<ClassLoadingInterceptorsDeposit> interceptorsDepositClass = ClassLoadingInterceptorsDeposit.class;
+
+        ctConstructor.insertBefore(interceptorsDepositClass.getName() + ".doBefore" +
+                "(\"" + className + "\",\"" + "初始化开始" + "\",\""+parameterTypesStr+"\");");
+        ctConstructor.insertAfter(interceptorsDepositClass.getName() + ".doAfter" +
+                "(\"" + className + "\",\"" + "初始化" + "\",\""+parameterTypesStr+"\");");
+
     }
 
     private static void methodAop(String className, CtMethod ctMethod) throws CannotCompileException {
         if (null == ctMethod || ctMethod.isEmpty()) {
             return;
         }
+        String parameterTypesStr = "voidParameter";
+        try {
+            CtClass[] parameterTypes = ctMethod.getParameterTypes();
+
+            if (parameterTypes!=null && parameterTypes.length>0) {
+                parameterTypesStr = Stream.of(parameterTypes).map(CtClass::getName).collect(Collectors.joining(","));
+
+            }
+        } catch (Exception e) {
+            logger.error("[getParameterTypesError]", e);
+        }
+
         boolean isMethodStatic = Modifier.isStatic(ctMethod.getModifiers());
         String aopClassName = isMethodStatic ? "\"" + className + "\"" : "this.getClass().getName()";
 
-        Class<InterceptorsDeposit> interceptorsDepositClass = InterceptorsDeposit.class;
+        Class<ClassLoadingInterceptorsDeposit> interceptorsDepositClass = ClassLoadingInterceptorsDeposit.class;
 
-        ctMethod.insertBefore(interceptorsDepositClass.getName() + ".doBefore"+
-                "(" + aopClassName + ",\"" + ctMethod.getName()+ "\");");
-        ctMethod.insertAfter(interceptorsDepositClass.getName() + ".doAfter"+
-                "(" + aopClassName + ",\"" + ctMethod.getName()+ "\");");
+        ctMethod.insertBefore(interceptorsDepositClass.getName() + ".doBefore" +
+                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\""+parameterTypesStr+"\");");
+        ctMethod.insertAfter(interceptorsDepositClass.getName() + ".doAfter" +
+                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\""+parameterTypesStr+"\");");
     }
 
     private boolean packagePathFilter(String className) {

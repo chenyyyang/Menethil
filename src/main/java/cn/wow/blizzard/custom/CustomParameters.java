@@ -1,6 +1,5 @@
 package cn.wow.blizzard.custom;
 
-import cn.wow.blizzard.core.InterceptorsDeposit;
 
 import java.util.HashSet;
 
