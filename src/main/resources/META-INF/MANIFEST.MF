@@ -1,0 +1,4 @@
+Manifest-Version: 1.0
+Premain-Class: cn.wow.blizzard.core.AgentMain
+Agent-Class: cn.wow.blizzard.core.AgentMain
+Can-Redefine-Classes: true
