@@ -1,6 +1,6 @@
 package cn.wow.blizzard.core;
 
-import cn.wow.blizzard.custom.CustomParameters;
+import cn.wow.blizzard.custom.GlobalConfiguration;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtBehavior;
@@ -118,7 +118,7 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
             return false;
         }
 
-        Set<String> includes = CustomParameters.INCLUDE_PACKAGES;
+        Set<String> includes = GlobalConfiguration.INCLUDE_PACKAGES;
 
         if (null == includes || includes.isEmpty()) {
             return false;
