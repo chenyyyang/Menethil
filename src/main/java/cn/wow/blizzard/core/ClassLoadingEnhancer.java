@@ -70,7 +70,7 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
                 if (null != methods && methods.length > 0) {
 
                     for (CtMethod ctMethod : methods) {
-                        methodAop(className, ctMethod);
+                        methodAop(className, ctMethod,loader);
                     }
                     byteCode = ctClass.toBytecode();
                 }
@@ -93,11 +93,9 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
 
         ctConstructor.insertBeforeBody(interceptorsDepositClass.getName() + ".doBeforeConstructor" +
                 "(\"" + className + "\",\"" + InternalParameters.DEFAULT_CONSTRUCTOR_METHOD_NAME + "\",\"" + parameterTypesStr + "\");");
-        ctConstructor.insertAfter(interceptorsDepositClass.getName() + ".doAfter" +
-                "(\"" + className + "\",\"" + InternalParameters.DEFAULT_CONSTRUCTOR_METHOD_NAME + "\",\"" + parameterTypesStr + "\");");
     }
 
-    private static void methodAop(String className, CtMethod ctMethod) throws CannotCompileException {
+    private static void methodAop(String className, CtMethod ctMethod, ClassLoader loader) throws CannotCompileException {
         if (null == ctMethod || ctMethod.isEmpty()) {
             return;
         }
@@ -107,9 +105,9 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
         String aopClassName = isMethodStatic ? "\"" + className + "\"" : "this.getClass().getName()";
 
         ctMethod.insertBefore(interceptorsDepositClass.getName() + ".doBefore" +
-                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\"" + parameterTypesStr + "\");");
+                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\"" + parameterTypesStr + "\",\"" + loader.toString() + "\");");
         ctMethod.insertAfter(interceptorsDepositClass.getName() + ".doAfter" +
-                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\"" + parameterTypesStr + "\");");
+                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\"" + parameterTypesStr +"\",\"" + loader.toString() + "\");");
     }
 
     private boolean packagePathFilter(String className) {

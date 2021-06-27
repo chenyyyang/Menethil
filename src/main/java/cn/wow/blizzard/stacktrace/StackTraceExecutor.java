@@ -11,4 +11,9 @@ public class StackTraceExecutor {
             new SynchronousQueue<>(),
             new ThreadPoolExecutor.CallerRunsPolicy());
 
+   public static void persist(String className, String methodName, String collectStackStr) {
+      Thread thread = Thread.currentThread();
+
+
+   }
 }

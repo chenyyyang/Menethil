@@ -23,22 +23,22 @@ public class ClassLoadingInterceptorsDeposit {
         }
     }
 
-    public static void doBefore(String className, String methodName, String parameterTypes) {
+    public static void doBefore(String className, String methodName, String parameterTypes, String loader) {
         logger.debug("doBefore:" + className + "-->" + methodName + "-->" + parameterTypes);
         for (Interceptor interceptor : InterceptorsDeposit) {
             try {
-                interceptor.doBefore(className, methodName, parameterTypes);
+                interceptor.doBefore(className, methodName, parameterTypes, loader);
             } catch (Throwable throwable) {
                 logger.error("doBefore error:" + interceptor.shortName(), throwable);
             }
         }
     }
 
-    public static void doAfter(String className, String methodName, String parameterTypes) {
+    public static void doAfter(String className, String methodName, String parameterTypes, String loader) {
         logger.debug("doAfter:" + className + "-->" + methodName + "-->" + parameterTypes);
         for (Interceptor interceptor : InterceptorsDeposit) {
             try {
-                interceptor.doAfter(className, methodName, parameterTypes);
+                interceptor.doAfter(className, methodName, parameterTypes, loader);
             } catch (Throwable throwable) {
                 logger.error("doAfter error:" + interceptor.shortName(), throwable);
             }
