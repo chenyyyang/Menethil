@@ -10,6 +10,10 @@ public class GlobalConfiguration {
 
    public static HashSet<String> INCLUDE_PACKAGES = new HashSet<>(1);
 
+   public static String JDBC_URL = "jdbc:mysql://localhost:3306/?useUnicode=true&characterEncoding=UTF-8";
+   public static String JDBC_USERNAME = "root";
+   public static  String JDBC_PASSWORD = "12345678";
+
    static {
      /* 2021-06-26 22:18:57 INFO  [main] InterceptorsDeposit:11 - doBefore:real.world.tools.zkClient.ZKClientBuildereventThreadPoolSize
       2021-06-26 22:18:57 INFO  [main] InterceptorsDeposit:15 - doAfter:real.world.tools.zkClient.ZKClientBuildereventThreadPoolSize

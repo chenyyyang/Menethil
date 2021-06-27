@@ -1,5 +1,6 @@
 package cn.wow.blizzard.stacktrace;
 
+import cn.wow.blizzard.custom.GlobalConfiguration;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,13 +26,9 @@ public class StackTraceExecutor {
     static AtomicBoolean initOK = new AtomicBoolean(false);
 
     static {
-        String url = "jdbc:mysql://localhost:3306/?useUnicode=true&characterEncoding=UTF-8";
-        String username = "root";
-        String password = "12345678";
-
-        hikariDataSource.setJdbcUrl(url);
-        hikariDataSource.setUsername(username);
-        hikariDataSource.setPassword(password);
+        hikariDataSource.setJdbcUrl(GlobalConfiguration.JDBC_URL);
+        hikariDataSource.setUsername(GlobalConfiguration.JDBC_USERNAME);
+        hikariDataSource.setPassword(GlobalConfiguration.JDBC_PASSWORD);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             hikariDataSource.shutdown();
             threadPoolExecutor.shutdown();
@@ -46,15 +43,15 @@ public class StackTraceExecutor {
         Thread thread = Thread.currentThread();
         String threadName = thread.getName();
 
-        threadPoolExecutor.execute(()->{
+        threadPoolExecutor.execute(() -> {
 
             try (Connection connection = hikariDataSource.getConnection(); Statement statement = connection.createStatement()) {
 
                 statement.execute("INSERT INTO Menethil.stacktrace " +
                         "(classloader,threadName,createdTime, stacktrace,`depth`,stackCrc) " +
-                        "VALUES ('"+classloaderName+"','"+threadName+"','"+ LocalDateTime.now()+"','"
-                        +collectStackStr +"','"+collectStackStr.split("\n").length
-                        +"', CRC32('"+collectStackStr+"'))");
+                        "VALUES ('" + classloaderName + "','" + threadName + "','" + LocalDateTime.now() + "','"
+                        + collectStackStr + "','" + collectStackStr.split("\n").length
+                        + "', CRC32('" + collectStackStr + "'))");
             } catch (Throwable ignore) {
             }
 
