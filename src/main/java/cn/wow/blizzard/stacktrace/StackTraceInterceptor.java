@@ -20,10 +20,6 @@ public class StackTraceInterceptor implements Interceptor {
 
     @Override
     public void doBeforeConstructor(String className, String methodName, String parameterTypes) {
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        String collectStackStr  = extracted(methodName, stackTrace);
-        logger.info(collectStackStr);
-
     }
 
 
@@ -36,11 +32,11 @@ public class StackTraceInterceptor implements Interceptor {
     @Override
     public void doAfter(String className, String methodName, String parameterTypes,String classloaderName) {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
-        String collectStackStr = extracted(methodName, stackTrace);
+        String collectStackStr = extracted(methodName,parameterTypes, stackTrace);
         StackTraceExecutor.persist(className, methodName,collectStackStr ,classloaderName);
     }
 
-    private String extracted(String methodName, StackTraceElement[] stackTrace) {
+    private String extracted(String methodName, String parameterTypes, StackTraceElement[] stackTrace) {
         List<StackTraceElement> stackTraceArr = new ArrayList<>(stackTrace.length);
         boolean flag = false;
         for (int i = 0; i < stackTrace.length; i++) {
