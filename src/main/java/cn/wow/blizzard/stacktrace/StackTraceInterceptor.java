@@ -29,15 +29,15 @@ public class StackTraceInterceptor implements Interceptor {
 
 
     @Override
-    public void doBefore(String className, String methodName, String parameterTypes,String loader) {
+    public void doBefore(String className, String methodName, String parameterTypes,String classloaderName) {
 
     }
 
     @Override
-    public void doAfter(String className, String methodName, String parameterTypes,String loader) {
+    public void doAfter(String className, String methodName, String parameterTypes,String classloaderName) {
         StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
         String collectStackStr = extracted(methodName, stackTrace);
-        StackTraceExecutor.persist(className, methodName,collectStackStr );
+        StackTraceExecutor.persist(className, methodName,collectStackStr ,classloaderName);
     }
 
     private String extracted(String methodName, StackTraceElement[] stackTrace) {
