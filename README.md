@@ -33,7 +33,7 @@
  ```
 -javaagent:/Users/{省略}/Menethil/target/Menethil-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
-4.javaagent添加完成
+4.javaagent添加完成   
 5.启动项目，去本地DB查看效果
 
 ### 分析
@@ -66,3 +66,8 @@ Westworld.java:21  real.world.Westworld  ::main
 ```
 
 可以看到是main线程从main方法为入口，调用了case1方法，然后调用了StateGovernment.get方法...
+
+```
+//查看调用深度最深的 stacktrace
+SELECT * FROM  stacktrace s  WHERE threadName = 'main' ORDER BY  `depth` DESC  limit 1
+```
