@@ -7,6 +7,10 @@ public class ClassLoadingInterceptorsDeposit {
 
     static final Logger logger = LoggerFactory.getLogger(ClassLoadingInterceptorsDeposit.class);
 
+    public static void doBeforeConstructor(String className, String methodName,String parameterTypes){
+        logger.info("doBeforeConstructor:"+className+"-->"+methodName+"-->"+parameterTypes);
+    }
+
     public static void doBefore(String className, String methodName,String parameterTypes){
         logger.info("doBefore:"+className+"-->"+methodName+"-->"+parameterTypes);
     }
