@@ -1,8 +1,9 @@
 package cn.wow.blizzard.core;
 
-import cn.wow.blizzard.custom.CustomParameters;
+import cn.wow.blizzard.custom.GlobalConfiguration;
 import javassist.CannotCompileException;
 import javassist.ClassPool;
+import javassist.CtBehavior;
 import javassist.CtClass;
 import javassist.CtConstructor;
 import javassist.CtMethod;
@@ -69,7 +70,7 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
                 if (null != methods && methods.length > 0) {
 
                     for (CtMethod ctMethod : methods) {
-                        methodAop(className, ctMethod);
+                        methodAop(className, ctMethod,loader);
                     }
                     byteCode = ctClass.toBytecode();
                 }
@@ -86,52 +87,27 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
         if (null == ctConstructor || ctConstructor.isEmpty()) {
             return;
         }
-        String parameterTypesStr = "voidParameter";
-        try {
-            CtClass[] parameterTypes = ctConstructor.getParameterTypes();
-
-            if (parameterTypes!=null && parameterTypes.length>0) {
-                parameterTypesStr = Stream.of(parameterTypes).map(CtClass::getName).collect(Collectors.joining(","));
-
-            }
-        } catch (Exception e) {
-            logger.error("[getParameterTypesError]", e);
-        }
+        String parameterTypesStr = getParameterTypesStr(ctConstructor);
 
         Class<ClassLoadingInterceptorsDeposit> interceptorsDepositClass = ClassLoadingInterceptorsDeposit.class;
 
-        ctConstructor.insertBefore(interceptorsDepositClass.getName() + ".doBefore" +
-                "(\"" + className + "\",\"" + "初始化开始" + "\",\""+parameterTypesStr+"\");");
-        ctConstructor.insertAfter(interceptorsDepositClass.getName() + ".doAfter" +
-                "(\"" + className + "\",\"" + "初始化" + "\",\""+parameterTypesStr+"\");");
-
+        ctConstructor.insertBeforeBody(interceptorsDepositClass.getName() + ".doBeforeConstructor" +
+                "(\"" + className + "\",\"" + InternalParameters.DEFAULT_CONSTRUCTOR_METHOD_NAME + "\",\"" + parameterTypesStr + "\");");
     }
 
-    private static void methodAop(String className, CtMethod ctMethod) throws CannotCompileException {
+    private static void methodAop(String className, CtMethod ctMethod, ClassLoader loader) throws CannotCompileException {
         if (null == ctMethod || ctMethod.isEmpty()) {
             return;
         }
-        String parameterTypesStr = "voidParameter";
-        try {
-            CtClass[] parameterTypes = ctMethod.getParameterTypes();
-
-            if (parameterTypes!=null && parameterTypes.length>0) {
-                parameterTypesStr = Stream.of(parameterTypes).map(CtClass::getName).collect(Collectors.joining(","));
-
-            }
-        } catch (Exception e) {
-            logger.error("[getParameterTypesError]", e);
-        }
-
+        String parameterTypesStr = getParameterTypesStr(ctMethod);
+        Class<ClassLoadingInterceptorsDeposit> interceptorsDepositClass = ClassLoadingInterceptorsDeposit.class;
         boolean isMethodStatic = Modifier.isStatic(ctMethod.getModifiers());
         String aopClassName = isMethodStatic ? "\"" + className + "\"" : "this.getClass().getName()";
 
-        Class<ClassLoadingInterceptorsDeposit> interceptorsDepositClass = ClassLoadingInterceptorsDeposit.class;
-
         ctMethod.insertBefore(interceptorsDepositClass.getName() + ".doBefore" +
-                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\""+parameterTypesStr+"\");");
+                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\"" + parameterTypesStr + "\",\"" + loader.toString() + "\");");
         ctMethod.insertAfter(interceptorsDepositClass.getName() + ".doAfter" +
-                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\""+parameterTypesStr+"\");");
+                "(" + aopClassName + ",\"" + ctMethod.getName() + "\",\"" + parameterTypesStr +"\",\"" + loader.toString() + "\");");
     }
 
     private boolean packagePathFilter(String className) {
@@ -140,7 +116,7 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
             return false;
         }
 
-        Set<String> includes = CustomParameters.INCLUDE_PACKAGES;
+        Set<String> includes = GlobalConfiguration.INCLUDE_PACKAGES;
 
         if (null == includes || includes.isEmpty()) {
             return false;
@@ -157,4 +133,18 @@ public class ClassLoadingEnhancer implements ClassFileTransformer {
         return doTransformFlag;
     }
 
+    private static String getParameterTypesStr(CtBehavior ctConstructor) {
+        String parameterTypesStr = InternalParameters.DEFAULT_METHOD_PARAMETER;
+        try {
+            CtClass[] parameterTypes = ctConstructor.getParameterTypes();
+
+            if (parameterTypes != null && parameterTypes.length > 0) {
+                parameterTypesStr = Stream.of(parameterTypes).map(CtClass::getName).collect(Collectors.joining(","));
+
+            }
+        } catch (Exception e) {
+            logger.error("[getParameterTypesError]", e);
+        }
+        return parameterTypesStr;
+    }
 }
